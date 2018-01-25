@@ -19,7 +19,7 @@ private:
 	QTcpSocket *sok;
     QString host="127.0.0.1";
 	quint16 port=111;//just unused port
-	quint16 blockSize=0;
+	quint32 blockSize=0;
     ScreenMain *scrMain;
     static const quint8 onSetClientName=2;
     static const quint8 onSetClientActive=1;
@@ -33,7 +33,7 @@ private:
 private slots:
     void onSockReadyRead();
 public slots:
-	void onSendPic(QImage img, QDateTime datetime);
+	void onSendPic(QPixmap *pic);
 
 };
 

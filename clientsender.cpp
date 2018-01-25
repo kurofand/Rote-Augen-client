@@ -5,7 +5,6 @@ ClientSender::ClientSender(QObject *parent) :
 {
     sok=new QTcpSocket(this);
 	connect(sok, SIGNAL(readyRead()), this, SLOT(onSockReadyRead()));
-    //не забудь тут указать порт и хост - теоретически они должны браться из файла
     std::ifstream settingFile;
     try
     {
@@ -39,7 +38,7 @@ void ClientSender::sendRequest(quint8 comm)
     out<<comm;
     out<<" ";
     out.device()->seek(0);
-	out<<(quint16)(block.size()-sizeof(quint16));
+	out<<(quint32)(block.size()-sizeof(quint32));
     sok->write(block);
 }
 
@@ -77,26 +76,24 @@ void ClientSender::onSockReadyRead()
 			qDebug()<<name;
             scrMain->setName(name);
 		}
-        //there call screenMain setName
         break;
     }
     case onSetClientActive:
     {
         scrMain=new ScreenMain();
-		connect(scrMain, SIGNAL(sendPicToSocket(QImage, QDateTime)), this, SLOT(onSendPic(QImage, QDateTime)));
+		connect(scrMain, SIGNAL(sendPicToSocket(QPixmap*)), this, SLOT(onSendPic(QPixmap*)));
 		QString mes;
 		in>>mes;
 		if(scrMain)
 		{
-			//qDebug()<<sok->bytesAvailable();
 			QByteArray block;
 			QDataStream out(&block, QIODevice::WriteOnly);
-			out<<(quint16)0;
+			out<<(quint32)0;
 			out<<onClientAnswer;
 			out<<true;
 			out<<onRequestName;
 			out.device()->seek(0);
-			out<<(quint16)(block.size()-sizeof(quint16));
+			out<<(quint32)(block.size()-sizeof(quint32));
 			sok->write(block);
 		}
         break;
@@ -107,7 +104,7 @@ void ClientSender::onSockReadyRead()
 		in>>sec;
 		QByteArray block;
 		QDataStream out(&block, QIODevice::WriteOnly);
-		out<<(quint16)0;
+		out<<(quint32)0;
 		if(sec!=0)
 		{
 			out<<onClientAnswer<<true<<onStartClient;
@@ -116,7 +113,7 @@ void ClientSender::onSockReadyRead()
 		else
 			out<<onClientAnswer<<false<<onStartClient;
 		out.device()->seek(0);
-		out<<(quint16)(block.size()-sizeof(quint16));
+		out<<(quint32)(block.size()-sizeof(quint32));
 		sok->write(block);
 
 		break;
@@ -127,42 +124,29 @@ void ClientSender::onSockReadyRead()
 		in>>trash;
 		QByteArray block;
 		QDataStream out(&block, QIODevice::WriteOnly);
-		out<<(quint16)0;
-//		out<<(quint16)0;
+		out<<(quint32)0;
 		out<<onClientAnswer;
 		out<<scrMain->stop()<<onClientDisable;
 		out.device()->seek(0);
-//		out<<(quint16)(block.size()-sizeof(quint16));
-		out<<(quint16)(block.size()-sizeof(quint16));
+		out<<(quint32)(block.size()-sizeof(quint32));
 		sok->write(block);
 		break;
 	}
-/*    case onRunClient:
-    {
-        uint16_t inter;
-        in>>inter;
-        if(scrMain!=NULL)
-            scrMain->run(inter);
-        break;
-	}*/
     }
 }
 
-void ClientSender::onSendPic(QImage img, QDateTime datetime)
+void ClientSender::onSendPic(QPixmap *pic)
 {
 	qDebug()<<"send pic";
 	QByteArray block;
 	QDataStream out(&block, QIODevice::WriteOnly);
-	out<<(quint16)0;
-//	out<<(quint16)0;
-	out<<onSendPicture;//<<img<<datetime;
-//	out<<datetime.toString();
-	img.save(out.device(),"PNG");
-//	out<<datetime.toString();
+	out.setVersion(QDataStream::Qt_4_8);
+	out<<(quint32)0;
+	out<<onSendPicture;
+	out<<*pic;
 	out.device()->seek(0);
-	out<<(quint16)(block.size()-sizeof(quint16));
-//	out<<(quint16)(block.size()-sizeof(quint16));
-	qDebug()<<(quint16)(block.size()-sizeof(quint16));
+	out<<(quint32)(block.size()-sizeof(quint32));
+	qDebug()<<(quint32)(block.size()-sizeof(quint32));
 	sok->write(block);
 
 }

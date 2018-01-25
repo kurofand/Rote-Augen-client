@@ -27,13 +27,13 @@ public:
 private:
     Ui::ScreenMain *ui;
     QTimer *timer;
-    QPixmap pixmap;
+	QPixmap *pixmap;
     QString name;
 private slots:
     void take();
 
 signals:
-	void sendPicToSocket(QImage img, QDateTime datetime);
+	void sendPicToSocket(QPixmap *pic);
 
 };
 
